@@ -35,7 +35,7 @@ class Robot(object):
         twst.linear.z = 0
         twst.angular.z = 0
         twst.linear.y = control.speed
-        vl = vr = tst.linear.y
+        vl = vr = twst.linear.y
         if control.emergency:
             vl=vr=0
         elif control.left:
@@ -66,10 +66,10 @@ class Robot(object):
         cs = ControlState()
         cs.parse_incoming(data.data)
         self.control_state = cs
-        control_to_twist(cs)
+        self.control_to_twist(cs)
 
     def robo_command_callback(self, data):
-        twst = data.data
+        twst = data
         dat = '!{0},{1},{2}\n'.format(twst.linear.y, twst.angular.x, twst.angular.y)
         rospy.loginfo(dat)
         #with self.ser_lock:

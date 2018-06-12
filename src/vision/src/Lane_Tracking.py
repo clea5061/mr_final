@@ -77,7 +77,7 @@ class image_converter:
                         centerMask.itemset((i,center),255)
             iteration = iteration + 1
 
-        centerPoint = ("[" + str(centerX[top-15]) + " " + str(centerY[top-15]) + "]")
+        centerPoint = ("[" + str(centerX[top-bottom-15]) + " " + str(centerY[top-bottom-15]) + "]")
         self.string_pub.publish(centerPoint)
 
         finalImg = cv2.bitwise_or(roiImg, centerMask)

@@ -5,7 +5,7 @@ import std_msgs
 
 class ControlPacket(AbstractPacket):
     opcode = b'\x05ST\x18'
-    publisher = rospy.Publisher('robo_comm/control', std_msgs.msg.Int16, queue_size=10)
+    publisher = rospy.Publisher('robo_comm/control', std_msgs.msg.Int32, queue_size=10)
     class Factory:
         def create(self):
             return ControlPacket()
@@ -20,7 +20,9 @@ class ControlPacket(AbstractPacket):
         self.controls, self.speed = unpack("!hh", b1)
 
     def process_packet(self):
+        msg = std_msgs.msg.Int32()
         data = self.controls << 16
         data = data | self.speed
-        ControlPacket.publisher.publish(data)
+        msg.data = data
+        ControlPacket.publisher.publish(msg)
         pass

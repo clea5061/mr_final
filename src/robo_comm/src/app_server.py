@@ -12,14 +12,14 @@ from packets import ack_packet, conn_ack_packet
 import packets.packet_util as putil
 
 class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
-
+    active = True
     def __init__(self, request, client_address, server):
         self.processor = PacketProcessor.get_instance()
         SocketServer.BaseRequestHandler.__init__(self, request, client_address, server)
         pass
 
     def handle(self):
-        while not rospy.is_shutdown():
+        while ThreadedTCPRequestHandler.active:
             data = self.request.recv(4)
             if not data:
                 break
@@ -63,6 +63,7 @@ class AppServer():
 
     def stop(self):
         if self.server_thread.is_alive():
+            ThreadedTCPRequestHandler.active = False
             self.server.shutdown()
             self.server.server_close()
             self.server_thread.join()
@@ -75,3 +76,4 @@ if __name__ == "__main__":
     app_serve.start()
     #input("Press Enter to continue...")
     rospy.spin()
+    app_serve.stop()

@@ -31,7 +31,7 @@ class image_converter:
         lowerBlack = np.array([0, 0, 0], dtype="uint8")
         upperBlack = np.array([255, 255, 255], dtype="uint8")
 
-        # Load a color image
+        # Convert to Gray scale
         height,width = img.shape[:2]
         grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -81,6 +81,8 @@ class image_converter:
         self.string_pub.publish(centerPoint)
 
         finalImg = cv2.bitwise_or(roiImg, centerMask)
+
+        cv2.imshow('Final_Image', finalImg)
 
         try:
             self.image_pub.publish(self.bridge.cv2_to_imgmsg(finalImg, "bgr"))

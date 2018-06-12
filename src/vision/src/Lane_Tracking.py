@@ -18,6 +18,7 @@ class image_converter:
     def __init__(self):
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("image/canny", Image, queue_size=10)
+        self.string_pub = rospy.Publisher("string/center", String, queue_size=10)
         self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback)
 
     def callback(self,data):
@@ -44,9 +45,9 @@ class image_converter:
         cannyImg = cv2.Canny(gaussImg,lowThresh,highThresh)
 
         # ROI filter
-        top = 280
-        bottom = 150
-        vertices = np.array([[0,top],[0,bottom],[594,bottom],[594,top]], np.int32)
+        top = 210
+        bottom = 100
+        vertices = np.array([[0,top],[0,bottom],[320,bottom],[320,top]], np.int32)
         roiImg = roi(cannyImg, [vertices])
 
         centerMask = np.zeros((height,width), np.uint8)
@@ -75,6 +76,9 @@ class image_converter:
                         centerY[iteration] = center
                         centerMask.itemset((i,center),255)
             iteration = iteration + 1
+
+        centerPoint = ("[" + str(centerX[top-15]) + " " + str(centerY[top-15]) + "]")
+        self.string_pub.publish(centerPoint)
 
         finalImg = cv2.bitwise_or(roiImg, centerMask)
 

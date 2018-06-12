@@ -18,7 +18,7 @@ class Webcam:
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
         while not rospy.is_shutdown():
-            img = cap.read()
+            ret, img = cap.read()
             try:
                 img_msg = self.bridge.cv2_to_imgmsg(img, "bgr8")
                 self.image_pub.publish(img_msg)

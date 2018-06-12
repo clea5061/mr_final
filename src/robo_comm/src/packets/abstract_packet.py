@@ -32,7 +32,7 @@ class AbstractPacket(Packet):
                 recv += len(dat)
         return b1
 
-    def read_packet(self, instream: socket):
+    def read_packet(self, instream):
         b1 = self.read_in_size(instream, 8)
         self.packet_id, self.packet_length = unpack_from('!II', b1)
 

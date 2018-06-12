@@ -1,8 +1,10 @@
-#import rospy
+#!/usr/bin/env python
+
+import rospy
 import socket
 import threading
 import sys
-import socketserver as SocketServer
+import SocketServer
 from packets.packet_factory import PacketFactory
 from packet_processor import PacketProcessor
 from packets.packet import Packet
@@ -13,17 +15,17 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 
     def __init__(self, request, client_address, server):
         self.processor = PacketProcessor.get_instance()
-        super(ThreadedTCPRequestHandler, self).__init__(request, client_address, server)
+        SocketServer.BaseRequestHandler.__init__(self, request, client_address, server)
         pass
 
     def handle(self):
-        while True:
+        while not rospy.is_shutdown():
             data = self.request.recv(4)
             if not data:
                 break
             print(data)
             try:
-                packet: Packet = PacketFactory.get_packet(data)
+                packet = PacketFactory.get_packet(data)
                 packet.read_packet(self.request)
                 print(packet)
                 if not putil.is_ack(packet):
@@ -68,8 +70,8 @@ class AppServer():
 
 
 if __name__ == "__main__":
-    #rospy.init_node("robo_comm")
+    rospy.init_node("robo_comm")
     app_serve = AppServer()
     app_serve.start()
-    input("Press Enter to continue...")
-    #rospy.spin()
+    #input("Press Enter to continue...")
+    rospy.spin()

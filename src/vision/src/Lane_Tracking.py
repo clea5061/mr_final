@@ -1,5 +1,5 @@
-import roslib
-roslib.load_manifest('my_package')
+#!/usr/bin/env python
+
 import sys
 import rospy
 import numpy as np
@@ -17,7 +17,8 @@ def roi(img, vertices):
 class image_converter:
     def __init__(self):
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("image_topic",Image,self.callback)
+        self.image_pub = rospy.Publisher("image/canny", Image, queue_size=10)
+        self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback)
 
     def callback(self,data):
         try:
@@ -28,7 +29,7 @@ class image_converter:
         # Define lane marking color limits
         lowerBlack = np.array([0, 0, 0], dtype="uint8")
         upperBlack = np.array([255, 255, 255], dtype="uint8")
-                        
+
         # Load a color image
         height,width = img.shape[:2]
         grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -76,9 +77,9 @@ class image_converter:
             iteration = iteration + 1
 
         finalImg = cv2.bitwise_or(roiImg, centerMask)
-        
+
         try:
-            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr"))
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(finalImg, "bgr"))
         except CvBridgeError as e:
             print(e)
 
@@ -89,7 +90,6 @@ def main():
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down")
-    cv2.destroyAllWindows() 
 
 if __name__=="__main__":
     main()

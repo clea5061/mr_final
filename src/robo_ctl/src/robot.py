@@ -1,6 +1,6 @@
 import serial
 import rospy
-from geometry_msgs import Twist
+from geometry_msgs.msg import Twist
 from threading import Lock
 
 class ControlState():

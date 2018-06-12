@@ -1,6 +1,7 @@
 import serial
 import rospy
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Int16
 from threading import Lock
 
 class ControlState():
@@ -23,8 +24,8 @@ class Robot(object):
         self.robo_pub = rospy.Publisher("robo_ctl/control", Twist, queue_size=10)
         self.autonomous = False
         self.robo = serial.Serial('/dev/ttyACM0', 57600)
-        rospy.Subscriber("robo_comm/control", self.control_callback)
-        rospy.Subscriber("robo_ctl/control", self.robo_command_callback)
+        rospy.Subscriber("robo_comm/control", Int16, self.control_callback)
+        rospy.Subscriber("robo_ctl/control", Twist, self.robo_command_callback)
 
     def control_to_twist(self, control):
         twst = Twist()
@@ -63,6 +64,7 @@ class Robot(object):
         cs = ControlState()
         cs.parse_incoming(data.data)
         self.control_state = cs
+        control_to_twist(cs)
 
     def robo_command_callback(self, data):
         twst = data.data

@@ -84,6 +84,9 @@ class Robot(object):
         self.control_to_twist(cs)
 
     def light_callback(self, data):
+        with self.auto_lock:
+            if not self.autonomous:
+                return
         ls = chr(data.data)
         with self.light_lock:
             if ls == 'R':
@@ -91,7 +94,7 @@ class Robot(object):
                 self.stop()
             elif ls == 'G':
                 self.light_state = 1
-            elif ls == 'N' and ls <> 3:
+            elif ls == 'N' and self.light_state <> 3:
                 self.light_state = 2
                 self.stop()
             else:

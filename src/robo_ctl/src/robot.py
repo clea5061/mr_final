@@ -1,7 +1,7 @@
 import serial
 import rospy
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Int32
+from std_msgs.msg import Int32, Char
 from threading import Lock
 from vision import lane_center_to_twist
 
@@ -84,7 +84,7 @@ class Robot(object):
         self.control_to_twist(cs)
 
     def light_callback(self, data):
-        ls = data.data
+        ls = chr(data.data)
         with self.light_lock:
             if ls == 'R':
                 self.light_state = 0

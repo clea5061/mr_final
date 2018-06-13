@@ -97,8 +97,6 @@ class Robot(object):
             elif ls == 'N' and self.light_state <> 1:
                 self.light_state = 2
                 self.stop()
-            else:
-                self.light_state = 3
 
     def center_callback(self, data):
         with self.auto_lock:
@@ -119,7 +117,5 @@ class Robot(object):
     def robo_command_callback(self, data):
         twst = data
         dat = '!{0:0.1f},{1:0.1f},{2:0.1f}\n'.format(twst.linear.y, twst.angular.x, twst.angular.y)
-        rospy.loginfo(dat)
         with self.ser_lock:
             self.robo.write(dat.encode())
-            #rospy.loginfo(self.robo.readline())

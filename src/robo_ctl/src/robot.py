@@ -42,14 +42,16 @@ class Robot(object):
             if control.forward:
                 vl *= 0.7
             elif control.reverse:
-                vr *= 0.7
+                vr *= -0.7
+                vl *= -1
             else:
                 vl *= -1
         elif control.right:
             if control.forward:
                 vr *=0.7
             elif control.reverse:
-                vl *= 0.7
+                vl *= -0.7
+                vr *= -1
             else:
                 vr *= -1
         elif control.reverse:
@@ -72,5 +74,6 @@ class Robot(object):
         twst = data
         dat = '!{0},{1},{2}\n'.format(twst.linear.y, twst.angular.x, twst.angular.y)
         rospy.loginfo(dat)
-        #with self.ser_lock:
-        #    self.robo.write(dat.encode())
+        with self.ser_lock:
+            self.robo.write(dat.encode())
+            #rospy.loginfo(self.robo.readline())

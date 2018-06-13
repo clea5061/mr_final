@@ -21,6 +21,7 @@ class Webcam:
             ret, img = cap.read()
             try:
                 img_msg = self.bridge.cv2_to_imgmsg(img, "bgr8")
+                img_msg.header.stamp = rospy.Time.now()
                 self.image_pub.publish(img_msg)
             except:
                 pass

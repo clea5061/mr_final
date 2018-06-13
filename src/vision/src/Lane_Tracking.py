@@ -19,9 +19,13 @@ class image_converter:
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("image/canny", Image, queue_size=10)
         self.string_pub = rospy.Publisher("string/center", String, queue_size=10)
-        self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback)
+        self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback, queue_size=10)
 
     def callback(self,data):
+        delay = (rospy.get_rostime() - data.header.stamp).to_sec()
+        if delay > 0.07:
+            return
+
         try:
             img = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -45,8 +49,8 @@ class image_converter:
         cannyImg = cv2.Canny(gaussImg,lowThresh,highThresh)
 
         # ROI filter
-        top = 210
-        bottom = 100
+        top = 240
+        bottom = 160
         vertices = np.array([[0,top],[0,bottom],[320,bottom],[320,top]], np.int32)
         roiImg = roi(cannyImg, [vertices])
 
@@ -57,43 +61,37 @@ class image_converter:
         iteration = 0
         for i in range(bottom, top):
             track = 0
-            for j in range(width):
+            for j in range(40,300):
                 if roiImg.item(i,j) > 0 and track < 4 and (abs(j - laneTrack[iteration,track-1]) > 3):
-                    if track == 0 and ((abs(j - laneTrack[iteration-1,0]) < 8) or laneTrack[iteration-1,0] == 0):
-                        laneTrack[iteration,0] = j
-                        track = track + 1
-                    elif track == 1 and ((abs(j - laneTrack[iteration-1,1]) < 8) or laneTrack[iteration-1,1] == 0):
-                        laneTrack[iteration,1] = j
-                        track = track + 1
-                    elif track == 2 and ((abs(j - laneTrack[iteration-1,2]) < 8) or laneTrack[iteration-1,2] == 0):
-                        laneTrack[iteration,2] = j
-                        track = track + 1
-                    elif track == 3 and ((abs(j - laneTrack[iteration-1,3]) < 8) or laneTrack[iteration-1,3] == 0):
-                        laneTrack[iteration,3] = j
-                        track = track + 1
+                    if ((abs(j - laneTrack[iteration-1,track]) < 8) or laneTrack[iteration-1,track] == 0):
+                        laneTrack[iteration,track] = j
+                        track += 1
+                    if track == 3:
                         center = (laneTrack[iteration,2]+laneTrack[iteration,1])/2
                         centerX[iteration] = i
                         centerY[iteration] = center
                         centerMask.itemset((i,center),255)
+                        break
             iteration = iteration + 1
 
-        centerPoint = ("[" + str(centerX[top-15]) + " " + str(centerY[top-15]) + "]")
-        self.string_pub.publish(centerPoint)
+        #centerPoint = ("[" + str(centerX[top-15]) + " " + str(centerY[top-15]) + "]")
 
+        #self.string_pub.publish(centerPoint)
         finalImg = cv2.bitwise_or(roiImg, centerMask)
 
         try:
-            self.image_pub.publish(self.bridge.cv2_to_imgmsg(finalImg, "bgr"))
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(finalImg, "mono8"))
         except CvBridgeError as e:
             print(e)
 
 def main():
-    ic = image_converter()
     rospy.init_node('image_converter',anonymous=True)
+    ic = image_converter()
     try:
         rospy.spin()
     except KeyboardInterrupt:
         print("Shutting down")
+
 
 if __name__=="__main__":
     main()

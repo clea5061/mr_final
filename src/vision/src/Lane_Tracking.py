@@ -61,9 +61,9 @@ class image_converter:
         iteration = 0
         for i in range(bottom, top):
             track = 0
-            for j in range(40,300):
+            for j in range(width):
                 if roiImg.item(i,j) > 0 and track < 4 and (abs(j - laneTrack[iteration,track-1]) > 3):
-                    if ((abs(j - laneTrack[iteration-1,track]) < 8) or laneTrack[iteration-1,track] == 0):
+                    if ((abs(j - laneTrack[iteration-1,track]) < 24) or laneTrack[iteration-1,track] == 0):
                         laneTrack[iteration,track] = j
                         track += 1
                     if track == 3:
@@ -74,7 +74,7 @@ class image_converter:
                         break
             iteration = iteration + 1
 
-        centerPoint = 160 - centerX[60]
+        centerPoint = 160 - centerY[60] -5
         self.center_pub.publish(centerPoint)
         finalImg = cv2.bitwise_or(roiImg, centerMask)
 

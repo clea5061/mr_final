@@ -72,6 +72,12 @@ class image_converter:
                         centerY[iteration] = center
                         centerMask.itemset((i,center),255)
                         break
+                if j == width-1 and track < 3 and track <> 0:
+                    invs = width if laneTrack[iteration, 0] < width/2 else 0
+                    center = (invs+laneTrack[iteration,track-1])/2
+                    centerX[iteration] = i
+                    centerY[iteration] = center
+                    centerMask.itemset((i, center),255)
             iteration = iteration + 1
 
         centerPoint = 160 - centerY[60] -5

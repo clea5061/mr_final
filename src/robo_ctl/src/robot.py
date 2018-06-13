@@ -24,12 +24,14 @@ class Robot(object):
         self.ser_lock = Lock()
         self.robo_pub = rospy.Publisher("robo_ctl/control", Twist, queue_size=10)
         self.autonomous = False
+        self.light_state = 4
         self.robo = serial.Serial('/dev/ttyACM0', 57600)
         if self.robo:
             rospy.loginfo('Connected to robot')
         rospy.Subscriber("robo_comm/control", Int32, self.control_callback)
         rospy.Subscriber("robo_ctl/control", Twist, self.robo_command_callback)
-        rospy.Subscriber("", Int32, self.center_callback)
+        rospy.Subscriber("vision/center", Int32, self.center_callback)
+        rospy.Subscriber("vision/light", Char, self.light_callback)
 
     def control_to_twist(self, control):
         twst = Twist()
@@ -75,18 +77,38 @@ class Robot(object):
             self.autonomous = False
         if self.autonomous:
             return
-        control_to_twist(cs)
+        self.control_to_twist(cs)
+
+    def light_callback(self, data):
+        ls = data.data
+        if ls == 'R':
+            self.light_state = 0
+            self.stop()
+        elif ls == 'G':
+            self.light_state = 1
+        elif ls == 'N':
+            self.light_state = 2
+            self.stop()
+        else:
+            self.light_state = 3
 
     def center_callback(self, data):
-        if not self.autonomous:
+        if not self.autonomous or (self.light_state == 0 or self.light_state == 2):
             return
         speed = self.control_state.speed
         twst = lane_center_to_twist(data.data, speed)
         self.robo_pub.publish(twst)
 
+    def stop(self):
+        twst = Twist()
+        twst.linear.y = 0
+        twst.angular.x = 0
+        twst.angular.y = 0
+        self.robo_pub.publish(twst)
+
     def robo_command_callback(self, data):
         twst = data
-        dat = '!{0},{1},{2}\n'.format(twst.linear.y, twst.angular.x, twst.angular.y)
+        dat = '!{0:0.1f},{1:0.1f},{2:0.1f}\n'.format(twst.linear.y, twst.angular.x, twst.angular.y)
         rospy.loginfo(dat)
         with self.ser_lock:
             self.robo.write(dat.encode())

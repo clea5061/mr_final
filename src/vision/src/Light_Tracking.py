@@ -4,15 +4,14 @@ import sys
 import rospy
 import numpy as np
 import cv2
-from std_msgs.msg import String
+from std_msgs.msg import Char
 from sensor_msgs.msg import Image
 from cv_bridge impoty CvBridge, CvBridgeError
 
 class image_converter:
     def __init__(self):
         self.bridge = CvBridge()
-        self.image_pub = rospy.Publisher("image/light", Image, queue_size=10)
-        self.string_pub = rospy.Publisher("string/light", String, queue_size=10)
+        self.light_pub = rospy.Publisher("vision/light", Char, queue_size=10)
         self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback)
 
     def callback(self,data):
@@ -49,14 +48,14 @@ class image_converter:
             if radius > radMin:
                 light = 'R'
         
-        if len(greenCnts) > 0:
+        elif len(greenCnts) > 0:
             greenC = max(greenCnts, key=cv2.contourArea)
             ((greenX,greenY),greenR) = cv2.minEnclosingCircle(greenC)
 
             if greenR > radMin:
                 light = 'G'
 
-        self.string_pub_publish(light)
+        self.light_pub_publish(light)
 
 def main():
     ic = image_converter()

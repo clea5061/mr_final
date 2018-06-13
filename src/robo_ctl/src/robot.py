@@ -27,7 +27,7 @@ class Robot(object):
         self.light_lock = Lock()
         self.robo_pub = rospy.Publisher("robo_ctl/control", Twist, queue_size=10)
         self.autonomous = False
-        self.light_state = 4
+        self.light_state = 3
         self.robo = serial.Serial('/dev/ttyACM0', 57600)
         if self.robo:
             rospy.loginfo('Connected to robot')
@@ -91,7 +91,7 @@ class Robot(object):
                 self.stop()
             elif ls == 'G':
                 self.light_state = 1
-            elif ls == 'N':
+            elif ls == 'N' and ls <> 3:
                 self.light_state = 2
                 self.stop()
             else:

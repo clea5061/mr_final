@@ -3,7 +3,7 @@ import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32
 from threading import Lock
-
+from vision import lane_center_to_twist
 class ControlState():
     def __init__(self):
         pass
@@ -15,6 +15,7 @@ class ControlState():
         self.right = state & 0x2
         self.forward = state & 0x4
         self.reverse = state & 0x8
+        self.autonomous = state & 0x10
         self.emergency = state & 0x20
 
 class Robot(object):
@@ -28,6 +29,7 @@ class Robot(object):
             rospy.loginfo('Connected to robot')
         rospy.Subscriber("robo_comm/control", Int32, self.control_callback)
         rospy.Subscriber("robo_ctl/control", Twist, self.robo_command_callback)
+        rospy.Subscriber("", Int32, self.center_callback)
 
     def control_to_twist(self, control):
         twst = Twist()
@@ -68,7 +70,19 @@ class Robot(object):
         cs = ControlState()
         cs.parse_incoming(data.data)
         self.control_state = cs
-        self.control_to_twist(cs)
+        self.autonomous = cs.autonomous
+        if cs.emergency:
+            self.autonomous = False
+        if self.autonomous:
+            return
+        control_to_twist(cs)
+
+    def center_callback(self, data):
+        if not self.autonomous:
+            return
+        speed = self.control_state.speed
+        twst = lane_center_to_twist(data.data, speed)
+        self.robo_pub.publish(twst)
 
     def robo_command_callback(self, data):
         twst = data

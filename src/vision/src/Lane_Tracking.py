@@ -4,7 +4,7 @@ import sys
 import rospy
 import numpy as np
 import cv2
-from std_msgs.msg import String
+from std_msgs.msg import Int32
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
@@ -18,7 +18,7 @@ class image_converter:
     def __init__(self):
         self.bridge = CvBridge()
         self.image_pub = rospy.Publisher("image/canny", Image, queue_size=10)
-        self.string_pub = rospy.Publisher("string/center", String, queue_size=10)
+        self.center_pub = rospy.Publisher("vision/center", Int32, queue_size=10)
         self.image_sub = rospy.Subscriber("image/rgb", Image, self.callback, queue_size=10)
 
     def callback(self,data):
@@ -74,8 +74,8 @@ class image_converter:
                         break
             iteration = iteration + 1
 
-        #centerPoint = ("[" + str(centerX[top-15]) + " " + str(centerY[top-15]) + "]")
-        #self.string_pub.publish(centerPoint)
+        centerPoint = 160 - centerX[60]
+        self.center_pub.publish(centerPoint)
         finalImg = cv2.bitwise_or(roiImg, centerMask)
 
         cv2.imshow('Final_Image', finalImg)

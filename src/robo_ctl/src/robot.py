@@ -4,6 +4,7 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32
 from threading import Lock
 from vision import lane_center_to_twist
+
 class ControlState():
     def __init__(self):
         pass
@@ -22,6 +23,8 @@ class Robot(object):
     
     def __init__(self):
         self.ser_lock = Lock()
+        self.auto_lock = Lock()
+        self.light_lock = Lock()
         self.robo_pub = rospy.Publisher("robo_ctl/control", Twist, queue_size=10)
         self.autonomous = False
         self.light_state = 4
@@ -72,7 +75,8 @@ class Robot(object):
         cs = ControlState()
         cs.parse_incoming(data.data)
         self.control_state = cs
-        self.autonomous = cs.autonomous
+        with self.auto_lock:
+            self.autonomous = cs.autonomous
         if cs.emergency:
             self.autonomous = False
         if self.autonomous:
@@ -81,20 +85,23 @@ class Robot(object):
 
     def light_callback(self, data):
         ls = data.data
-        if ls == 'R':
-            self.light_state = 0
-            self.stop()
-        elif ls == 'G':
-            self.light_state = 1
-        elif ls == 'N':
-            self.light_state = 2
-            self.stop()
-        else:
-            self.light_state = 3
+        with self.light_lock:
+            if ls == 'R':
+                self.light_state = 0
+                self.stop()
+            elif ls == 'G':
+                self.light_state = 1
+            elif ls == 'N':
+                self.light_state = 2
+                self.stop()
+            else:
+                self.light_state = 3
 
     def center_callback(self, data):
-        if not self.autonomous or (self.light_state == 0 or self.light_state == 2):
-            return
+        with self.auto_lock:
+            with self.light_lock:
+                if not self.autonomous or (self.light_state == 0 or self.light_state == 2):
+                    return
         speed = self.control_state.speed
         twst = lane_center_to_twist(data.data, speed)
         self.robo_pub.publish(twst)

@@ -9,13 +9,13 @@ def lane_center_to_twist(center, speed):
         twst.angular.x = speed
         twst.angular.y = speed
         return twst
-    z = 33.0
-    curve = sqrt(center**2 + z**2)/(2*sin(np.pi/(1+center/160))*23.0)
-    velocity = speed+(speed-(2*speed*curve))/(2*curve+1)
+    z = 23.0
+    curve = sqrt(center**2 + z**2)/(2*sin(np.pi/(2+center/160.0))*23.0)
+    velocity = speed+(speed-(2*speed*curve))/(2*curve+60.0/abs(center))
     if center < 0:
         twst.angular.x = velocity
         twst.angular.y = speed
-    else if center > 0:
+    elif center > 0:
         twst.angular.y = velocity
         twst.angular.x = speed
     else:
